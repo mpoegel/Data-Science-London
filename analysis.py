@@ -7,6 +7,20 @@ import numpy as np
 import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 
+def PCA(A):
+    ''' Returns the principal components of A
+    '''
+    A_mean = np.mean(A, axis=0)
+    A = A - A_mean
+    covariance_matrix = np.cov(A.T)
+    eigen_values, eigen_vectors = np.linalg.eig(covariance_matrix)
+    new_index = np.argsort(eigen_values)[::-1]
+    eigen_vectors = eigen_vectors[:,new_index]
+    eigen_values = eigen_values[new_index]
+
+    return np.dot(eigen_vectors.T, A.T).T
+
+
 def meanClassifier(Cp, Cm):
     ''' Calculate the mean classifier.
         Returns w,t: w (normal) = the difference of the means
@@ -21,6 +35,7 @@ def meanClassifier(Cp, Cm):
     t = (np.dot(meanp,w) + np.dot(meanm,w)) / 2
 
     return w, t
+
 
 def fisherClassifier(Cp, Cm):
     ''' Calculate the fisher classifier.
@@ -47,6 +62,7 @@ def fisherClassifier(Cp, Cm):
 def classifyData(data, w, t):
     pass
 
+
 def classHist(Cp, Cm, t, title, err):
     ''' Return a Histogram of the projections.
     '''
@@ -63,6 +79,7 @@ def classHist(Cp, Cm, t, title, err):
     # add a vertical line at the threshold
     plt.axvline(x=t, linestyle='--', color='black')
     return fig
+
 
 def main():
     ''' Create models using the Mean and Fisher LDA Methods to predict the
@@ -109,6 +126,22 @@ def main():
            [ int(x >= t) for x in c0_proj ])
     err = (sum(err[0])/len(err[0]) + sum(err[1])/len(err[1])) / 2
     fig2 = classHist(c1_proj, c0_proj, t, "Fisher Method", err)
+
+    # Visualize the data by plotting the first two principal components
+    principal_coordinates = PCA(trainData)
+    plt.figure(3)
+    # break up the principal components by class
+    c1_pc = np.array([ trainData[x] for x in range(len(trainData)) \
+                            if trainLabels[x] == 1 ])
+    c0_pc = np.array([ trainData[x] for x in range(len(trainData)) \
+                            if trainLabels[x] == 0 ])
+    # plot class 1 in red and class 0 in blue
+    plt.plot(c1_pc[:,0], c1_pc[:,1], 'ro')
+    plt.plot(c0_pc[:,0], c0_pc[:,1], 'bo')
+    plt.title("Training Data - First 2 Principal Components")
+    plt.xlabel("Principal Component 1")
+    plt.ylabel("Principal Component 2")
+
 
     plt.show()
 
